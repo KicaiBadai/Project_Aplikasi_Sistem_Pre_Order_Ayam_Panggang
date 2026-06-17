@@ -47,8 +47,17 @@ class _OrdersAdminPageState extends State<OrdersAdminPage> {
       )
     ''')
           .order('id_invoice', ascending: false);
+
+      final users = await supabase.from('tabel_user').select('auth_id, email');
+      final userMap = {for (var u in users) u['auth_id']: u['email']};
+
+      List<Map<String, dynamic>> modifiedData = List<Map<String, dynamic>>.from(data);
+      for(var order in modifiedData) {
+        order['email'] = userMap[order['auth_id']] ?? '-';
+      }
+
       setState(() {
-        orders = data;
+        orders = modifiedData;
         isLoading = false;
       });
     } catch (e) {
@@ -152,6 +161,66 @@ class _OrdersAdminPageState extends State<OrdersAdminPage> {
     }
   }
 
+  Future<void> _editCatatanAdmin(Map order, StateSetter setStateSheet) async {
+    final TextEditingController controller =
+        TextEditingController(text: order['catatan_admin'] ?? '');
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit Catatan Admin'),
+        content: TextField(
+          controller: controller,
+          maxLines: 3,
+          decoration: const InputDecoration(
+            hintText: 'Masukkan catatan...',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Batal', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              try {
+                await supabase
+                    .from('tabel_invoice')
+                    .update({'catatan_admin': controller.text.trim()})
+                    .eq('id_invoice', order['id_invoice']);
+
+                setStateSheet(() {
+                  order['catatan_admin'] = controller.text.trim();
+                });
+                getOrders();
+
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Catatan admin berhasil diperbarui'),
+                    backgroundColor: Colors.green,
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              } catch (e) {
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                      content: Text(e.toString()), backgroundColor: Colors.red),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFF8C42)),
+            child: const Text('Simpan', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showZoomableImage(String imageUrl) {
     showDialog(
       context: context,
@@ -208,11 +277,12 @@ class _OrdersAdminPageState extends State<OrdersAdminPage> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setStateSheet) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
         child: DraggableScrollableSheet(
           initialChildSize: 0.9,
           minChildSize: 0.5,
@@ -242,6 +312,11 @@ class _OrdersAdminPageState extends State<OrdersAdminPage> {
                 const SizedBox(height: 20),
                 _buildInfoRow('Invoice', 'INV-${order['kode_invoice']}'),
                 _buildInfoRow('Total', formatRupiah(order['total'])),
+                _buildInfoRow('Email', order['email'] ?? '-'),
+                _buildInfoRow('Penerima', order['nama_penerima'] ?? '-'),
+                _buildInfoRow('No HP', order['no_hp'] ?? '-'),
+                _buildInfoRow('Alamat', order['alamat'] ?? '-'),
+                _buildInfoRow('Catatan Pembeli', order['catatan'] ?? '-'),
                 _buildInfoRow(
                   'Metode',
                   order['tabel_metode_pembayaran']?['nama_metode'] ?? '-',
@@ -251,6 +326,44 @@ class _OrdersAdminPageState extends State<OrdersAdminPage> {
                   order['status'] ?? '-',
                   status: true,
                   statusColor: getStatusColor(order['status'] ?? 'pending'),
+                ),
+                const Divider(height: 32),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Catatan Admin',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.edit, color: Color(0xFFFF8C42)),
+                      onPressed: () => _editCatatanAdmin(order, setStateSheet),
+                      tooltip: 'Edit Catatan Admin',
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.orange.shade200),
+                  ),
+                  child: Text(
+                    (order['catatan_admin'] != null && order['catatan_admin'].toString().isNotEmpty)
+                        ? order['catatan_admin']
+                        : 'Belum ada catatan admin',
+                    style: TextStyle(
+                      color: (order['catatan_admin'] != null && order['catatan_admin'].toString().isNotEmpty)
+                          ? Colors.black87
+                          : Colors.grey.shade600,
+                      fontStyle: (order['catatan_admin'] != null && order['catatan_admin'].toString().isNotEmpty)
+                          ? FontStyle.normal
+                          : FontStyle.italic,
+                    ),
+                  ),
                 ),
                 const Divider(height: 32),
                 const Text(
@@ -446,7 +559,7 @@ class _OrdersAdminPageState extends State<OrdersAdminPage> {
           ),
         ),
       ),
-    );
+    ));
   }
 
   Widget _buildInfoRow(
