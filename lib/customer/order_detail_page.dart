@@ -221,356 +221,345 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
     final status = invoice!['status'] ?? 'pending';
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Detail Pesanan")),
+      backgroundColor: const Color(0xFFFEF7E8),
+      appBar: AppBar(
+        title: const Text(
+          "Detail Pesanan",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: const Color(0xFFFF8C42),
+        foregroundColor: Colors.white,
+        elevation: 0,
+      ),
 
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(15),
+        padding: const EdgeInsets.all(16),
 
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
 
           children: [
             // ===================== INVOICE =====================
-            Card(
-              elevation: 4,
-
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.02),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+                border: Border.all(color: Colors.grey.shade100, width: 0.5),
               ),
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
 
-              child: Padding(
-                padding: const EdgeInsets.all(15),
-
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-
-                  children: [
-                    Text(
-                      "INV-${invoice!['kode_invoice']}",
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
+                children: [
+                  Text(
+                    "INV-${invoice!['kode_invoice']}",
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1E293B),
                     ),
+                  ),
 
-                    const SizedBox(height: 20),
+                  const SizedBox(height: 20),
 
-                    // STATUS
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  // STATUS
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
 
-                      children: [
-                        const Text("Status", style: TextStyle(fontSize: 15)),
+                    children: [
+                      const Text(
+                        "Status",
+                        style: TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.w500),
+                      ),
 
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-
-                          decoration: BoxDecoration(
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: statusColor(status).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        child: Text(
+                          statusText(status).toUpperCase(),
+                          style: TextStyle(
                             color: statusColor(status),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-
-                          child: Text(
-                            statusText(status),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 11,
                           ),
                         ),
-                      ],
-                    ),
-
-                    const Divider(height: 30),
-
-                    // TANGGAL
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-
-                      children: [
-                        const Text("Tanggal"),
-
-                        Text(
-                          invoice!['tanggal'] ?? '-',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 15),
-
-                    // METODE
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-
-                      children: [
-                        const Text("Metode Pembayaran"),
-
-                        Text(
-                          metode?['nama_metode'] ?? 'COD / Tidak ada metode',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-
-                    // NOMOR PEMBAYARAN
-                    if (!isCOD && metode != null) ...[
-                      const SizedBox(height: 15),
-
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-
-                        children: [
-                          const Text("Nomor Pembayaran"),
-
-                          Text(
-                            metode['nomor_pembayaran'] ?? '-',
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 15),
-
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-
-                        children: [
-                          const Text("Atas Nama"),
-
-                          Text(
-                            metode['atas_nama'] ?? '-',
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ],
                       ),
                     ],
+                  ),
+
+                  const Divider(height: 32),
+
+                  // TANGGAL
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
+                    children: [
+                      const Text("Tanggal", style: TextStyle(color: Colors.grey, fontSize: 14)),
+
+                      Text(
+                        invoice!['tanggal'] ?? '-',
+                        style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // METODE
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
+                    children: [
+                      const Text("Metode Pembayaran", style: TextStyle(color: Colors.grey, fontSize: 14)),
+
+                      Text(
+                        metode?['nama_metode'] ?? 'COD / Tidak ada metode',
+                        style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+                      ),
+                    ],
+                  ),
+
+                  // NOMOR PEMBAYARAN
+                  if (!isCOD && metode != null) ...[
+                    const SizedBox(height: 12),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
+                      children: [
+                        const Text("Nomor Pembayaran", style: TextStyle(color: Colors.grey, fontSize: 14)),
+
+                        Text(
+                          metode['nomor_pembayaran'] ?? '-',
+                          style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
+                      children: [
+                        const Text("Atas Nama", style: TextStyle(color: Colors.grey, fontSize: 14)),
+
+                        Text(
+                          metode['atas_nama'] ?? '-',
+                          style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+                        ),
+                      ],
+                    ),
                   ],
-                ),
+                ],
               ),
             ),
 
             const SizedBox(height: 20),
 
             // ===================== DATA PENERIMA =====================
-            Card(
-              elevation: 4,
-
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.02),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+                border: Border.all(color: Colors.grey.shade100, width: 0.5),
               ),
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
 
-              child: Padding(
-                padding: const EdgeInsets.all(15),
-
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-
-                  children: [
-                    const Text(
-                      "Data Pengiriman",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
+                children: [
+                  const Text(
+                    "Data Pengiriman",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1E293B),
                     ),
+                  ),
 
-                    const SizedBox(height: 20),
+                  const SizedBox(height: 20),
 
-                    // NAMA
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  // NAMA
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
 
-                      children: [
-                        const Icon(Icons.person),
+                    children: [
+                      const Icon(Icons.person_outline, color: Color(0xFFFF8C42)),
 
-                        const SizedBox(width: 10),
+                      const SizedBox(width: 10),
 
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
 
-                            children: [
-                              const Text(
-                                "Nama Penerima",
-                                style: TextStyle(color: Colors.grey),
-                              ),
-
-                              Text(
-                                invoice!['nama_penerima'] ?? '-',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // HP
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-
-                      children: [
-                        const Icon(Icons.phone),
-
-                        const SizedBox(width: 10),
-
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-
-                            children: [
-                              const Text(
-                                "Nomor HP",
-                                style: TextStyle(color: Colors.grey),
-                              ),
-
-                              Text(
-                                invoice!['no_hp'] ?? '-',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // ALAMAT
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-
-                      children: [
-                        const Icon(Icons.location_on),
-
-                        const SizedBox(width: 10),
-
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-
-                            children: [
-                              const Text(
-                                "Alamat",
-                                style: TextStyle(color: Colors.grey),
-                              ),
-
-                              Text(
-                                invoice!['alamat'] ?? '-',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 15),
-
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text("Catatan"),
-                        const SizedBox(width: 20),
-
-                        Expanded(
-                          child: Text(
-                            invoice!['catatan'] == null ||
-                                    invoice!['catatan'].toString().isEmpty
-                                ? '-'
-                                : invoice!['catatan'],
-                            textAlign: TextAlign.right,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    // GPS
-                    if (invoice!['latitude'] != null &&
-                        invoice!['longitude'] != null) ...[
-                      const SizedBox(height: 20),
-
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-
-                        children: [
-                          const Icon(Icons.gps_fixed),
-
-                          const SizedBox(width: 10),
-
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-
-                              children: [
-                                const Text(
-                                  "Koordinat GPS",
-                                  style: TextStyle(color: Colors.grey),
-                                ),
-
-                                Text(
-                                  '${invoice!['latitude']}, ${invoice!['longitude']}',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
+                          children: [
+                            const Text(
+                              "Nama Penerima",
+                              style: TextStyle(color: Colors.grey, fontSize: 12),
                             ),
-                          ),
-                        ],
+
+                            Text(
+                              invoice!['nama_penerima'] ?? '-',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF1E293B),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
+                  ),
 
-                    // CATATAN
-                    if (invoice!['catatan'] != null &&
-                        invoice!['catatan'] != '') ...[
-                      const SizedBox(height: 20),
+                  const SizedBox(height: 16),
 
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                  // HP
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
 
-                        children: [
-                          const Icon(Icons.note),
+                    children: [
+                      const Icon(Icons.phone_android_outlined, color: Color(0xFFFF8C42)),
 
-                          const SizedBox(width: 10),
+                      const SizedBox(width: 10),
 
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
 
-                              children: [
-                                const Text(
-                                  "Catatan",
-                                  style: TextStyle(color: Colors.grey),
-                                ),
-
-                                Text(
-                                  invoice!['catatan'],
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
+                          children: [
+                            const Text(
+                              "Nomor HP",
+                              style: TextStyle(color: Colors.grey, fontSize: 12),
                             ),
-                          ),
-                        ],
+
+                            Text(
+                              invoice!['no_hp'] ?? '-',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF1E293B),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // ALAMAT
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+
+                    children: [
+                      const Icon(Icons.location_on_outlined, color: Color(0xFFFF8C42)),
+
+                      const SizedBox(width: 10),
+
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+
+                          children: [
+                            const Text(
+                              "Alamat",
+                              style: TextStyle(color: Colors.grey, fontSize: 12),
+                            ),
+
+                            Text(
+                              invoice!['alamat'] ?? '-',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF1E293B),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  const Divider(),
+                  const SizedBox(height: 12),
+
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text("Catatan Pembeli", style: TextStyle(color: Colors.grey, fontSize: 13)),
+                      const SizedBox(width: 20),
+
+                      Expanded(
+                        child: Text(
+                          invoice!['catatan'] == null ||
+                                  invoice!['catatan'].toString().isEmpty
+                              ? '-'
+                              : invoice!['catatan'],
+                          textAlign: TextAlign.right,
+                          style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  // GPS
+                  if (invoice!['latitude'] != null &&
+                      invoice!['longitude'] != null) ...[
+                    const SizedBox(height: 16),
+
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+
+                      children: [
+                        const Icon(Icons.gps_fixed_outlined, color: Colors.green),
+
+                        const SizedBox(width: 10),
+
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+
+                            children: [
+                              const Text(
+                                "Koordinat GPS",
+                                style: TextStyle(color: Colors.grey, fontSize: 12),
+                              ),
+
+                              Text(
+                                '${invoice!['latitude']}, ${invoice!['longitude']}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
-                ),
+                ],
               ),
             ),
 
@@ -582,18 +571,22 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                 padding: const EdgeInsets.all(15),
 
                 decoration: BoxDecoration(
-                  color: Colors.green.shade100,
+                  color: Colors.green.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(15),
+                  border: Border.all(color: Colors.green.withOpacity(0.2)),
                 ),
 
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.local_shipping, color: Colors.green),
+                    const Icon(Icons.local_shipping_outlined, color: Colors.green),
 
-                    SizedBox(width: 10),
+                    const SizedBox(width: 10),
 
                     Expanded(
-                      child: Text("COD - Tidak perlu upload pembayaran"),
+                      child: Text(
+                        "COD - Tidak perlu upload pembayaran",
+                        style: TextStyle(color: Colors.green.shade800, fontWeight: FontWeight.bold, fontSize: 13),
+                      ),
                     ),
                   ],
                 ),
@@ -604,7 +597,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
             // ===================== PESANAN =====================
             const Text(
               "Daftar Pesanan",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
             ),
 
             const SizedBox(height: 15),
@@ -612,61 +605,79 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
             ...pesananList.map((item) {
               final barang = item['tabel_barang'];
 
-              return Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(10),
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.02),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                  border: Border.all(color: Colors.grey.shade100, width: 0.5),
+                ),
+                padding: const EdgeInsets.all(12),
+                child: Row(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
 
-                  child: Row(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-
-                        child: Image.network(
-                          barang['foto'],
+                      child: Image.network(
+                        barang['foto'],
+                        width: 70,
+                        height: 70,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(
                           width: 70,
                           height: 70,
-                          fit: BoxFit.cover,
+                          color: Colors.grey.shade100,
+                          child: const Icon(Icons.image_not_supported, color: Colors.grey),
                         ),
                       ),
+                    ),
 
-                      const SizedBox(width: 15),
+                    const SizedBox(width: 15),
 
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
 
-                          children: [
-                            Text(
-                              barang['nama_barang'],
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
+                        children: [
+                          Text(
+                            barang['nama_barang'],
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              color: Color(0xFF1E293B),
                             ),
+                          ),
 
-                            const SizedBox(height: 5),
+                          const SizedBox(height: 5),
 
-                            Text("Qty : ${item['qty']}"),
+                          Text("Qty : ${item['qty']}", style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
 
-                            const SizedBox(height: 5),
+                          const SizedBox(height: 5),
 
-                            Text(
-                              "Rp ${item['harga']}",
-                              style: const TextStyle(
-                                color: Colors.orange,
-                                fontWeight: FontWeight.bold,
-                              ),
+                          Text(
+                            "Rp ${item['harga']}",
+                            style: const TextStyle(
+                              color: Color(0xFFFF8C42),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
+                    ),
 
-                      Text(
-                        "Rp ${item['subtotal']}",
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
+                    Text(
+                      "Rp ${item['subtotal']}",
+                      style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+                    ),
+                  ],
                 ),
               );
             }),
@@ -674,51 +685,59 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
             const SizedBox(height: 20),
 
             // ===================== TOTAL =====================
-            Card(
-              elevation: 4,
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.02),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+                border: Border.all(color: Colors.grey.shade100, width: 0.5),
+              ),
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
 
-              child: Padding(
-                padding: const EdgeInsets.all(15),
-
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-
-                  children: [
-                    const Text(
-                      "Total Pembayaran",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+                children: [
+                  const Text(
+                    "Total Pembayaran",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1E293B),
                     ),
+                  ),
 
-                    Text(
-                      "Rp ${invoice!['total']}",
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.orange,
-                      ),
+                  Text(
+                    "Rp ${invoice!['total']}",
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFFFF8C42),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 25),
 
             // ===================== BUKTI TRANSFER =====================
             if (!isCOD) ...[
               const Text(
                 "Bukti Transfer",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
               ),
 
               const SizedBox(height: 15),
 
               if (pembayaran?['bukti_transfer'] != null)
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(15),
+                  borderRadius: BorderRadius.circular(20),
 
                   child: Image.network(pembayaran!['bukti_transfer']),
                 ),
@@ -726,18 +745,24 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
               const SizedBox(height: 15),
 
               OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFFFF8C42),
+                  side: const BorderSide(color: Color(0xFFFF8C42), width: 1.2),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
                 onPressed: pickImage,
-
                 icon: const Icon(Icons.image),
-
-                label: const Text("Pilih / Ganti Bukti"),
+                label: const Text("Pilih / Ganti Bukti", style: TextStyle(fontWeight: FontWeight.bold)),
               ),
 
               const SizedBox(height: 15),
 
               if (imageFile != null)
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(15),
+                  borderRadius: BorderRadius.circular(20),
 
                   child: Image.file(
                     imageFile!,
@@ -747,18 +772,34 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                   ),
                 ),
 
-              const SizedBox(height: 15),
+              const SizedBox(height: 20),
 
               SizedBox(
                 width: double.infinity,
-                height: 50,
+                height: 55,
 
                 child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFF8C42),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
                   onPressed: isUpload ? null : uploadBukti,
 
                   child: isUpload
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text("Upload Bukti Pembayaran"),
+                      ? const SizedBox(
+                          height: 24,
+                          width: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text("Upload Bukti Pembayaran", style: TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ),
             ],

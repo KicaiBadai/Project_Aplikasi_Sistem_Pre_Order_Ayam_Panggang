@@ -16,16 +16,23 @@ class _AdminPageState extends State<AdminPage> {
   final supabase = Supabase.instance.client;
   int currentIndex = 0;
 
-  late final List<Widget> pages = [
-    const DashboardAdminPage(),
-    const BarangPage(),
-    const OrdersAdminPage(),
-    const ProfileAdminPage(),
-  ];
+  late final List<Widget> pages;
 
   @override
   void initState() {
     super.initState();
+    pages = [
+      DashboardAdminPage(
+        onViewAllOrders: () {
+          setState(() {
+            currentIndex = 2; // Index of OrdersAdminPage
+          });
+        },
+      ),
+      const BarangPage(),
+      const OrdersAdminPage(),
+      const ProfileAdminPage(),
+    ];
     _setAdminTag();
   }
 
@@ -166,34 +173,63 @@ class ProfileAdminPage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 color: const Color(0xFFFF8C42).withOpacity(0.1),
                 shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFFF8C42).withOpacity(0.1),
+                    blurRadius: 20,
+                  ),
+                ],
               ),
               child: const Icon(
-                Icons.admin_panel_settings,
+                Icons.admin_panel_settings_rounded,
                 size: 80,
                 color: Color(0xFFFF8C42),
               ),
             ),
-            const SizedBox(height: 24),
-            Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24),
+            const SizedBox(height: 16),
+            const Text(
+              'Administrator',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1E293B),
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  children: [
-                    _infoRow(Icons.email, 'Email', user?.email ?? '-'),
-                    const Divider(),
-                    _infoRow(Icons.vpn_key, 'User ID', user?.id ?? '-'),
-                    const Divider(),
-                    _infoRow(Icons.badge, 'Role', 'Administrator'),
-                  ],
-                ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Akses Kontrol & Konfigurasi Toko',
+              style: TextStyle(
+                fontSize: 13,
+                color: Colors.grey.shade600,
+              ),
+            ),
+            const SizedBox(height: 28),
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.02),
+                    blurRadius: 15,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+                border: Border.all(color: Colors.grey.shade100, width: 0.5),
+              ),
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  _infoRow(Icons.email_outlined, 'Email', user?.email ?? '-'),
+                  Divider(height: 24, color: Colors.grey.shade100),
+                  _infoRow(Icons.vpn_key_outlined, 'User ID', user?.id ?? '-'),
+                  Divider(height: 24, color: Colors.grey.shade100),
+                  _infoRow(Icons.badge_outlined, 'Role', 'Administrator Utama'),
+                ],
               ),
             ),
           ],
@@ -203,26 +239,44 @@ class ProfileAdminPage extends StatelessWidget {
   }
 
   Widget _infoRow(IconData icon, String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          Icon(icon, size: 22, color: const Color(0xFFFF8C42)),
-          const SizedBox(width: 16),
-          Text(
-            '$label:',
-            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFF8C42).withOpacity(0.1),
+            borderRadius: BorderRadius.circular(10),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(fontSize: 14),
-              overflow: TextOverflow.ellipsis,
-            ),
+          child: Icon(icon, size: 20, color: const Color(0xFFFF8C42)),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  color: Colors.grey.shade500,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                value,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1E293B),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

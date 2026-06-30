@@ -5,8 +5,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:http/http.dart' as http; // tambahkan
-import 'dart:convert'; // tambahkan
+import '../services/notification_service.dart';
+
 
 class PaymentPage extends StatefulWidget {
   final int invoiceId;
@@ -65,31 +65,6 @@ class _PaymentPageState extends State<PaymentPage> {
       setState(() => isLoading = false);
     }
   }
-
-  // ========== NOTIFIKASI ADMIN ==========
-  Future<void> sendNotifAdmin(String namaPenerima, int total) async {
-    try {
-      await http.post(
-        Uri.parse('https://onesignal.com/api/v1/notifications'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization':
-              'os_v2_app_bmuehx5xk5dhxk3sztcntskglt6kjwhgj23ezjey4riknmst6kz5lsknp7ygqcy4oboay3yeeyzomnq7gpnv64rll2qwrzx2xctj6pa',
-        },
-        body: jsonEncode({
-          'app_id': '0b2843df-b757-467b-ab72-ccc4d9c9465c',
-          'filters': [
-            {'field': 'tag', 'key': 'role', 'relation': '=', 'value': 'admin'},
-          ],
-          'headings': {'en': 'Pesanan Baru'},
-          'contents': {'en': 'Pesanan baru dari $namaPenerima total Rp $total'},
-        }),
-      );
-    } catch (e) {
-      print('Gagal kirim notifikasi admin: $e');
-    }
-  }
-  // =====================================
 
   Future<bool> _requestGalleryPermission() async {
     if (await Permission.photos.isGranted) return true;
@@ -189,7 +164,10 @@ class _PaymentPageState extends State<PaymentPage> {
       // Kirim notifikasi ke admin setelah upload berhasil
       final namaPenerima = invoice?['nama_penerima'] ?? 'Pelanggan';
       final total = invoice?['total'] ?? 0;
-      await sendNotifAdmin(namaPenerima, total);
+      await NotificationService.sendNotificationToAdmin(
+        namaPenerima: namaPenerima,
+        total: total,
+      );
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -251,14 +229,18 @@ class _PaymentPageState extends State<PaymentPage> {
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withOpacity(0.02),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
                 ],
+                border: Border.all(
+                  color: Colors.grey.shade100,
+                  width: 0.5,
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -269,6 +251,7 @@ class _PaymentPageState extends State<PaymentPage> {
                       color: Colors.grey,
                       fontSize: 12,
                       letterSpacing: 1,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 6),
@@ -277,6 +260,7 @@ class _PaymentPageState extends State<PaymentPage> {
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
+                      color: Color(0xFF1E293B),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -285,7 +269,7 @@ class _PaymentPageState extends State<PaymentPage> {
                     children: [
                       const Text(
                         'Total Bayar',
-                        style: TextStyle(color: Colors.grey, fontSize: 14),
+                        style: TextStyle(color: Colors.grey, fontSize: 14, fontWeight: FontWeight.w500),
                       ),
                       Text(
                         'Rp ${invoice?['total'] ?? 0}',
@@ -307,9 +291,9 @@ class _PaymentPageState extends State<PaymentPage> {
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: const Color(0xFFFFF3E0),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: const Color(0xFFFFCC80)),
+                color: const Color(0xFFFF8C42).withOpacity(0.05),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: const Color(0xFFFF8C42).withOpacity(0.15)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -327,7 +311,7 @@ class _PaymentPageState extends State<PaymentPage> {
                             errorBuilder: (_, __, ___) => Container(
                               width: 55,
                               height: 55,
-                              color: Colors.grey.shade200,
+                              color: Colors.white,
                               child: const Icon(
                                 Icons.payment,
                                 color: Color(0xFFFF8C42),
@@ -343,17 +327,18 @@ class _PaymentPageState extends State<PaymentPage> {
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
+                            color: Color(0xFF1E293B),
                           ),
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 20),
-                  const Divider(),
+                  Divider(color: const Color(0xFFFF8C42).withOpacity(0.15)),
                   const SizedBox(height: 15),
                   const Text(
                     'Nomor Pembayaran',
-                    style: TextStyle(color: Colors.grey, fontSize: 12),
+                    style: TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.w500),
                   ),
                   const SizedBox(height: 5),
                   SelectableText(
@@ -361,20 +346,21 @@ class _PaymentPageState extends State<PaymentPage> {
                     style: const TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                      color: Color(0xFF1E293B),
                     ),
                   ),
                   const SizedBox(height: 15),
                   const Text(
                     'Atas Nama',
-                    style: TextStyle(color: Colors.grey, fontSize: 12),
+                    style: TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.w500),
                   ),
                   const SizedBox(height: 5),
                   Text(
                     metodeData?['atas_nama'] ?? '-',
                     style: const TextStyle(
                       fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1E293B),
                     ),
                   ),
                 ],
@@ -388,7 +374,9 @@ class _PaymentPageState extends State<PaymentPage> {
               height: 55,
               child: OutlinedButton.icon(
                 style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: Color(0xFFFF8C42)),
+                  foregroundColor: const Color(0xFFFF8C42),
+                  side: const BorderSide(color: Color(0xFFFF8C42), width: 1.2),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
@@ -408,7 +396,7 @@ class _PaymentPageState extends State<PaymentPage> {
                   isPicking ? 'Memilih gambar...' : 'Pilih Bukti Transfer',
                   style: const TextStyle(
                     color: Color(0xFFFF8C42),
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
@@ -441,7 +429,8 @@ class _PaymentPageState extends State<PaymentPage> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  elevation: 2,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
                 onPressed: (isUpload || isPicking) ? null : uploadBuktiTransfer,
                 child: isUpload

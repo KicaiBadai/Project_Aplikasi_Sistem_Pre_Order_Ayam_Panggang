@@ -1,6 +1,8 @@
 // lib/pages/login_page.dart
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/auth_service.dart';
 import 'forgot_password.dart';
 import 'register_page.dart';
@@ -20,6 +22,7 @@ class _LoginPageState extends State<LoginPage>
   bool obscurePassword = true;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
+  StreamSubscription<AuthState>? _authSubscription;
 
   @override
   void initState() {
@@ -33,6 +36,19 @@ class _LoginPageState extends State<LoginPage>
       curve: Curves.easeOut,
     );
     _animationController.forward();
+
+    // Listen ke auth state. Jika terdeteksi session aktif (berhasil login),
+    // otomatis tutup halaman login ini agar tidak stuck.
+    _authSubscription = Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+      final session = data.session;
+      if (session != null && mounted) {
+        if (Navigator.canPop(context)) {
+          Navigator.pop(context);
+        } else {
+          Navigator.pushReplacementNamed(context, '/');
+        }
+      }
+    });
   }
 
   Future<void> login() async {
@@ -85,8 +101,25 @@ class _LoginPageState extends State<LoginPage>
     }
   }
 
+  Future<void> loginWithGoogle() async {
+    setState(() => isLoading = true);
+    try {
+      await Supabase.instance.client.auth.signInWithOAuth(
+        OAuthProvider.google,
+        redirectTo: 'com.preorderayam://login-callback',
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal login Google: $e')),
+      );
+      setState(() => isLoading = false);
+    }
+  }
+
   @override
   void dispose() {
+    _authSubscription?.cancel();
     emailController.dispose();
     passwordController.dispose();
     _animationController.dispose();
@@ -121,14 +154,18 @@ class _LoginPageState extends State<LoginPage>
                   children: [
                     const SizedBox(height: 60),
                     // Ilustrasi ayam dengan animasi
-                    Hero(
+                     Hero(
                       tag: 'chicken_hero',
                       child: Container(
                         height: 140,
                         width: 140,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white,
                           shape: BoxShape.circle,
+                          image: const DecorationImage(
+                            image: AssetImage('assets/images/logo.jpg'),
+                            fit: BoxFit.cover,
+                          ),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.1),
@@ -137,13 +174,6 @@ class _LoginPageState extends State<LoginPage>
                               offset: const Offset(0, 10),
                             ),
                           ],
-                        ),
-                        child: const Center(
-                          child: Icon(
-                            Icons.business_center,
-                            size: 70,
-                            color: Color(0xFFFF8C42),
-                          ),
                         ),
                       ),
                     ),
@@ -312,6 +342,33 @@ class _LoginPageState extends State<LoginPage>
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          // Google login button
+                          SizedBox(
+                            width: double.infinity,
+                            height: 55,
+                            child: OutlinedButton.icon(
+                              onPressed: isLoading ? null : loginWithGoogle,
+                              icon: Image.network(
+                                'https://developers.google.com/static/identity/images/g-logo.png',
+                                height: 24,
+                              ),
+                              label: const Text(
+                                'Masuk dengan Google',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF1E293B),
+                                ),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                side: BorderSide(color: Colors.grey.shade300, width: 1.5),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                              ),
                             ),
                           ),
                           const SizedBox(height: 24),

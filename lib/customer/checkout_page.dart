@@ -123,7 +123,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
           tabel_barang (
             id_barang,
             harga,
-            nama_barang
+            nama_barang,
+            stok
           )
         ''')
         .eq('auth_id', user.id);
@@ -185,6 +186,35 @@ class _CheckoutPageState extends State<CheckoutPage> {
       return;
     }
 
+    // Validasi stok ulang sebelum benar-benar checkout untuk mencegah race condition
+    for (var item in cartList) {
+      final barang = item['tabel_barang'];
+      final qty = item['qty'] as int;
+      final stok = (barang['stok'] ?? 0) as int;
+      
+      if (qty > stok) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            title: const Text('Stok Habis / Kurang'),
+            content: Text(
+              'Mohon maaf, stok "${barang['nama_barang']}" tidak mencukupi untuk pesanan Anda.\nStok tersedia: $stok.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+        return;
+      }
+    }
+
     setState(() => isProsesCheckout = true);
 
     try {
@@ -197,6 +227,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
             'total': total,
             'status': 'pending',
             'tanggal': DateTime.now().toIso8601String(),
+            'created_at': DateTime.now().toIso8601String(),
             'id_metode': selectedMetode!['id_metode'],
             'nama_penerima': namaController.text,
             'no_hp': hpController.text,
@@ -310,85 +341,100 @@ class _CheckoutPageState extends State<CheckoutPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Ringkasan pesanan dalam Card
-                Card(
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
+                // Ringkasan pesanan dalam Container
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Ringkasan Pesanan',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        ListView.separated(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: cartList.length,
-                          separatorBuilder: (_, __) => const Divider(),
-                          itemBuilder: (context, index) {
-                            final item = cartList[index];
-                            final barang = item['tabel_barang'];
-                            return Row(
-                              children: [
-                                Expanded(
-                                  flex: 3,
-                                  child: Text(
-                                    barang['nama_barang'],
-                                    style: const TextStyle(fontSize: 14),
-                                  ),
-                                ),
-                                Expanded(
-                                  flex: 1,
-                                  child: Text(
-                                    'x${item['qty']}',
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                                Expanded(
-                                  flex: 2,
-                                  child: Text(
-                                    'Rp ${(barang['harga'] as int).toString()}',
-                                    textAlign: TextAlign.right,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                        const Divider(height: 24),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              'Total',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Text(
-                              'Rp ${getTotal()}',
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFFFF8C42),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.02),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                    border: Border.all(
+                      color: Colors.grey.shade100,
+                      width: 0.5,
                     ),
+                  ),
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Ringkasan Pesanan',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1E293B),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: cartList.length,
+                        separatorBuilder: (_, __) => Divider(color: Colors.grey.shade100, height: 24),
+                        itemBuilder: (context, index) {
+                          final item = cartList[index];
+                          final barang = item['tabel_barang'];
+                          return Row(
+                            children: [
+                              Expanded(
+                                flex: 3,
+                                child: Text(
+                                  barang['nama_barang'],
+                                  style: const TextStyle(fontSize: 14, color: Color(0xFF1E293B), fontWeight: FontWeight.w500),
+                                ),
+                              ),
+                              Expanded(
+                                flex: 1,
+                                child: Text(
+                                  'x${item['qty']}',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                                ),
+                              ),
+                              Expanded(
+                                flex: 2,
+                                child: Text(
+                                  'Rp ${(barang['harga'] as int).toString()}',
+                                  textAlign: TextAlign.right,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                    color: Color(0xFF1E293B),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                      const Divider(height: 32),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Total',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF1E293B),
+                            ),
+                          ),
+                          Text(
+                            'Rp ${getTotal()}',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFFFF8C42),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -396,22 +442,28 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 // Form data pengiriman
                 const Text(
                   'Data Pengiriman',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
                 ),
                 const SizedBox(height: 12),
                 TextField(
                   controller: namaController,
                   decoration: InputDecoration(
                     labelText: 'Nama Penerima',
+                    labelStyle: TextStyle(color: Colors.grey.shade600, fontSize: 13),
                     prefixIcon: const Icon(
                       Icons.person_outline,
                       color: Color(0xFFFF8C42),
                     ),
                     filled: true,
                     fillColor: Colors.white,
-                    border: OutlineInputBorder(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide.none,
+                      borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(color: Color(0xFFFF8C42), width: 1.5),
                     ),
                   ),
                 ),
@@ -421,15 +473,21 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   keyboardType: TextInputType.phone,
                   decoration: InputDecoration(
                     labelText: 'Nomor HP',
+                    labelStyle: TextStyle(color: Colors.grey.shade600, fontSize: 13),
                     prefixIcon: const Icon(
                       Icons.phone_android_outlined,
                       color: Color(0xFFFF8C42),
                     ),
                     filled: true,
                     fillColor: Colors.white,
-                    border: OutlineInputBorder(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide.none,
+                      borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(color: Color(0xFFFF8C42), width: 1.5),
                     ),
                   ),
                 ),
@@ -439,15 +497,21 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   maxLines: 3,
                   decoration: InputDecoration(
                     labelText: 'Alamat Lengkap',
+                    labelStyle: TextStyle(color: Colors.grey.shade600, fontSize: 13),
                     prefixIcon: const Icon(
                       Icons.home_outlined,
                       color: Color(0xFFFF8C42),
                     ),
                     filled: true,
                     fillColor: Colors.white,
-                    border: OutlineInputBorder(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide.none,
+                      borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(color: Color(0xFFFF8C42), width: 1.5),
                     ),
                   ),
                 ),
@@ -457,17 +521,17 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   child: OutlinedButton.icon(
                     style: OutlinedButton.styleFrom(
                       foregroundColor: const Color(0xFFFF8C42),
-                      side: const BorderSide(color: Color(0xFFFF8C42)),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      side: const BorderSide(color: Color(0xFFFF8C42), width: 1.2),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
                     ),
                     onPressed: isGetLocation ? null : getCurrentLocation,
-                    icon: const Icon(Icons.my_location),
+                    icon: const Icon(Icons.my_location, size: 20),
                     label: isGetLocation
-                        ? const Text('Mengambil lokasi...')
-                        : const Text('Ambil Lokasi GPS'),
+                        ? const Text('Mengambil lokasi...', style: TextStyle(fontWeight: FontWeight.bold))
+                        : const Text('Ambil Lokasi GPS', style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ),
                 if (latitude != null && longitude != null)
@@ -487,6 +551,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                             style: const TextStyle(
                               fontSize: 12,
                               color: Colors.green,
+                              fontWeight: FontWeight.w500,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -500,15 +565,21 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   maxLines: 2,
                   decoration: InputDecoration(
                     labelText: 'Catatan (opsional)',
+                    labelStyle: TextStyle(color: Colors.grey.shade600, fontSize: 13),
                     prefixIcon: const Icon(
                       Icons.edit_note,
                       color: Color(0xFFFF8C42),
                     ),
                     filled: true,
                     fillColor: Colors.white,
-                    border: OutlineInputBorder(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide.none,
+                      borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(color: Color(0xFFFF8C42), width: 1.5),
                     ),
                   ),
                 ),
@@ -517,7 +588,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 // Metode pembayaran
                 const Text(
                   'Metode Pembayaran',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<Map>(
@@ -527,13 +598,13 @@ class _CheckoutPageState extends State<CheckoutPage> {
                       value: item,
                       child: Row(
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.payment,
-                            color: const Color(0xFFFF8C42),
+                            color: Color(0xFFFF8C42),
                             size: 20,
                           ),
                           const SizedBox(width: 8),
-                          Text(item['nama_metode']),
+                          Text(item['nama_metode'], style: const TextStyle(color: Color(0xFF1E293B), fontWeight: FontWeight.w500)),
                         ],
                       ),
                     );
@@ -542,13 +613,17 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide.none,
-                    ),
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 12,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(color: Color(0xFFFF8C42), width: 1.5),
                     ),
                   ),
                 ),
@@ -563,7 +638,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      elevation: 2,
+                      elevation: 0,
                     ),
                     onPressed: isProsesCheckout ? null : checkout,
                     child: isProsesCheckout
@@ -571,7 +646,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                             height: 24,
                             width: 24,
                             child: CircularProgressIndicator(
-                              strokeWidth: 2,
+                              strokeWidth: 2.5,
                               color: Colors.white,
                             ),
                           )

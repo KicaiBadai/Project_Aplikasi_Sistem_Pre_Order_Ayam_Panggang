@@ -3,7 +3,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'checkout_page.dart';
 
 class CartPage extends StatefulWidget {
-  const CartPage({super.key});
+  final VoidCallback? onCartUpdated;
+  const CartPage({super.key, this.onCartUpdated});
 
   @override
   CartPageState createState() => CartPageState(); // ubah return type
@@ -49,7 +50,8 @@ class CartPageState extends State<CartPage> with AutomaticKeepAliveClientMixin {
               id_barang,
               nama_barang,
               harga,
-              foto
+              foto,
+              stok
             )
           ''')
           .eq('auth_id', user.id);
@@ -59,6 +61,7 @@ class CartPageState extends State<CartPage> with AutomaticKeepAliveClientMixin {
           cartList = data;
           isLoading = false;
         });
+        widget.onCartUpdated?.call();
       }
     } catch (e) {
       print(e);
@@ -75,8 +78,28 @@ class CartPageState extends State<CartPage> with AutomaticKeepAliveClientMixin {
     return total;
   }
 
-  Future<void> updateQty(int id, int qty) async {
-    if (qty < 1) return;
+  Future<void> updateQty(int id, int qty, int stok) async {
+    if (qty < 1) {
+      await deleteItem(id);
+      return;
+    }
+    if (qty > stok) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text('Stok Tidak Mencukupi'),
+          content: Text('Batas pembelian maksimum adalah $stok item.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
     await supabase
         .from('tabel_keranjang')
         .update({'qty': qty})
@@ -187,18 +210,29 @@ class CartPageState extends State<CartPage> with AutomaticKeepAliveClientMixin {
           itemBuilder: (context, index) {
             final cart = cartList[index];
             final barang = cart['tabel_barang'];
-            return Card(
-              elevation: 3,
+            return Container(
               margin: const EdgeInsets.only(bottom: 16),
-              shape: RoundedRectangleBorder(
+              decoration: BoxDecoration(
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.02),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+                border: Border.all(
+                  color: Colors.grey.shade100,
+                  width: 0.5,
+                ),
               ),
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Row(
                   children: [
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(14),
                       child: Image.network(
                         barang['foto'],
                         width: 80,
@@ -207,7 +241,7 @@ class CartPageState extends State<CartPage> with AutomaticKeepAliveClientMixin {
                         errorBuilder: (_, __, ___) => Container(
                           width: 80,
                           height: 80,
-                          color: Colors.grey.shade200,
+                          color: Colors.grey.shade100,
                           child: const Icon(
                             Icons.broken_image,
                             color: Colors.grey,
@@ -225,6 +259,7 @@ class CartPageState extends State<CartPage> with AutomaticKeepAliveClientMixin {
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
+                              color: Color(0xFF1E293B),
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -244,7 +279,7 @@ class CartPageState extends State<CartPage> with AutomaticKeepAliveClientMixin {
                               Container(
                                 decoration: BoxDecoration(
                                   border: Border.all(
-                                    color: Colors.grey.shade300,
+                                    color: Colors.grey.shade200,
                                   ),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -252,10 +287,11 @@ class CartPageState extends State<CartPage> with AutomaticKeepAliveClientMixin {
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     IconButton(
-                                      icon: const Icon(Icons.remove, size: 18),
+                                      icon: const Icon(Icons.remove, size: 16, color: Color(0xFFFF8C42)),
                                       onPressed: () => updateQty(
                                         cart['id_keranjang'],
                                         cart['qty'] - 1,
+                                        barang['stok'] ?? 0,
                                       ),
                                       padding: EdgeInsets.zero,
                                       constraints: const BoxConstraints(),
@@ -267,15 +303,17 @@ class CartPageState extends State<CartPage> with AutomaticKeepAliveClientMixin {
                                           '${cart['qty']}',
                                           style: const TextStyle(
                                             fontWeight: FontWeight.bold,
+                                            color: Color(0xFF1E293B),
                                           ),
                                         ),
                                       ),
                                     ),
                                     IconButton(
-                                      icon: const Icon(Icons.add, size: 18),
+                                      icon: const Icon(Icons.add, size: 16, color: Color(0xFFFF8C42)),
                                       onPressed: () => updateQty(
                                         cart['id_keranjang'],
                                         cart['qty'] + 1,
+                                        barang['stok'] ?? 0,
                                       ),
                                       padding: EdgeInsets.zero,
                                       constraints: const BoxConstraints(),
@@ -286,11 +324,16 @@ class CartPageState extends State<CartPage> with AutomaticKeepAliveClientMixin {
                               const Spacer(),
                               IconButton(
                                 icon: const Icon(
-                                  Icons.delete_outline,
-                                  color: Colors.red,
+                                  Icons.delete_outline_rounded,
+                                  color: Colors.redAccent,
+                                  size: 20,
                                 ),
                                 onPressed: () =>
                                     deleteItem(cart['id_keranjang']),
+                                style: IconButton.styleFrom(
+                                  backgroundColor: Colors.red.shade50,
+                                  padding: const EdgeInsets.all(8),
+                                ),
                               ),
                             ],
                           ),
@@ -352,10 +395,62 @@ class CartPageState extends State<CartPage> with AutomaticKeepAliveClientMixin {
                   ),
                   elevation: 0,
                 ),
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const CheckoutPage()),
-                ),
+                onPressed: () {
+                  // Cek apakah ada barang yang melebihi stok atau habis
+                  for (var item in cartList) {
+                    final barang = item['tabel_barang'];
+                    final qty = item['qty'] as int;
+                    final stok = (barang['stok'] ?? 0) as int;
+                    
+                    if (stok <= 0) {
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          title: const Text('Barang Habis'),
+                          content: Text(
+                            'Barang "${barang['nama_barang']}" sudah habis. Harap hapus dari keranjang sebelum checkout.',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('OK'),
+                            ),
+                          ],
+                        ),
+                      );
+                      return;
+                    }
+                    
+                    if (qty > stok) {
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          title: const Text('Stok Kurang'),
+                          content: Text(
+                            'Stok "${barang['nama_barang']}" tidak mencukupi untuk pesanan Anda (Tersedia: $stok). Harap sesuaikan jumlahnya.',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('OK'),
+                            ),
+                          ],
+                        ),
+                      );
+                      return;
+                    }
+                  }
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const CheckoutPage()),
+                  );
+                },
                 child: const Text(
                   'Checkout',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),

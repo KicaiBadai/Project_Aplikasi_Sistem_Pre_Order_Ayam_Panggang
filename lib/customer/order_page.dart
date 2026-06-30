@@ -120,14 +120,25 @@ class OrdersPageState extends State<OrdersPage> {
           final invoice = invoiceList[index];
           final status = invoice['status'] ?? 'pending';
 
-          return Card(
-            elevation: 4,
+          return Container(
             margin: const EdgeInsets.only(bottom: 15),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.02),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+              border: Border.all(
+                color: Colors.grey.shade100,
+                width: 0.5,
+              ),
             ),
             child: InkWell(
-              borderRadius: BorderRadius.circular(15),
+              borderRadius: BorderRadius.circular(20),
               onTap: () async {
                 await Navigator.push(
                   context,
@@ -139,7 +150,7 @@ class OrdersPageState extends State<OrdersPage> {
                 getInvoices();
               },
               child: Padding(
-                padding: const EdgeInsets.all(15),
+                padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -153,14 +164,15 @@ class OrdersPageState extends State<OrdersPage> {
                             Text(
                               'INV-${invoice['kode_invoice']}',
                               style: const TextStyle(
-                                fontSize: 17,
+                                fontSize: 16,
                                 fontWeight: FontWeight.bold,
+                                color: Color(0xFF1E293B),
                               ),
                             ),
                             const SizedBox(height: 5),
                             Text(
                               invoice['tanggal'] ?? '-',
-                              style: TextStyle(color: Colors.grey[700]),
+                              style: TextStyle(color: Colors.grey[500], fontSize: 12, fontWeight: FontWeight.w500),
                             ),
                           ],
                         ),
@@ -170,14 +182,15 @@ class OrdersPageState extends State<OrdersPage> {
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: statusColor(status),
-                            borderRadius: BorderRadius.circular(20),
+                            color: statusColor(status).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(30),
                           ),
                           child: Text(
-                            statusText(status),
-                            style: const TextStyle(
-                              color: Colors.white,
+                            statusText(status).toUpperCase(),
+                            style: TextStyle(
+                              color: statusColor(status),
                               fontWeight: FontWeight.bold,
+                              fontSize: 11,
                             ),
                           ),
                         ),
@@ -190,13 +203,13 @@ class OrdersPageState extends State<OrdersPage> {
                       children: [
                         const Text(
                           'Total Pembayaran',
-                          style: TextStyle(fontSize: 15),
+                          style: TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.w500),
                         ),
                         Text(
                           'Rp ${invoice['total']}',
                           style: const TextStyle(
-                            fontSize: 18,
-                            color: Colors.orange,
+                            fontSize: 16,
+                            color: Color(0xFFFF8C42),
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -207,13 +220,14 @@ class OrdersPageState extends State<OrdersPage> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Metode', style: TextStyle(fontSize: 15)),
+                        const Text('Metode', style: TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.w500)),
                         Text(
                           invoice['tabel_metode_pembayaran']?['nama_metode'] ??
                               'Tidak ada metode',
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: Colors.black,
+                            color: Color(0xFF1E293B),
+                            fontSize: 14,
                           ),
                         ),
                       ],
@@ -226,9 +240,9 @@ class OrdersPageState extends State<OrdersPage> {
                         width: double.infinity,
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.blue.shade50,
+                          color: const Color(0xFFFF8C42).withOpacity(0.05),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.blue.shade200),
+                          border: Border.all(color: const Color(0xFFFF8C42).withOpacity(0.15)),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -236,8 +250,8 @@ class OrdersPageState extends State<OrdersPage> {
                             const Row(
                               children: [
                                 Icon(
-                                  Icons.admin_panel_settings,
-                                  color: Colors.blue,
+                                  Icons.admin_panel_settings_rounded,
+                                  color: Color(0xFFFF8C42),
                                   size: 18,
                                 ),
                                 SizedBox(width: 6),
@@ -245,7 +259,7 @@ class OrdersPageState extends State<OrdersPage> {
                                   'Catatan Admin',
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.blue,
+                                    color: Color(0xFFFF8C42),
                                   ),
                                 ),
                               ],
@@ -253,9 +267,9 @@ class OrdersPageState extends State<OrdersPage> {
                             const SizedBox(height: 8),
                             Text(
                               invoice['catatan_admin'],
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: Colors.black87,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey.shade800,
                               ),
                             ),
                           ],
@@ -267,6 +281,15 @@ class OrdersPageState extends State<OrdersPage> {
                     Align(
                       alignment: Alignment.centerRight,
                       child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFFF8C42),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        ),
                         onPressed: () async {
                           await Navigator.push(
                             context,
@@ -278,8 +301,8 @@ class OrdersPageState extends State<OrdersPage> {
                           );
                           getInvoices();
                         },
-                        icon: const Icon(Icons.receipt_long),
-                        label: const Text('Detail Pesanan'),
+                        icon: const Icon(Icons.receipt_long, size: 16),
+                        label: const Text('Detail Pesanan', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                       ),
                     ),
                   ],
