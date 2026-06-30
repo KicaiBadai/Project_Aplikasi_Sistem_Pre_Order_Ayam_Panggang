@@ -93,12 +93,3 @@ flutter run
 ```
 
 ---
-
-## 👥 Akun Akses Uji Coba
-
-- **Admin**:
-  - **Email**: `admin@gmail.com`
-  - **Password**: *(Hubungi pengembang / gunakan password default terdaftar)*
-
-- **Customer**:
-  - Silakan lakukan pendaftaran (Register) langsung dari aplikasi menggunakan alamat email aktif untuk menerima notifikasi.
